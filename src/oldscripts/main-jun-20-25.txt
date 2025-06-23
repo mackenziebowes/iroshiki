@@ -1,0 +1,222 @@
+const sub = Bun.argv[2];
+	if (!sub) {
+		console.error("  [No Command Set]");
+		console.log("  Iroshiki must be run with a command.");
+		process.exit(0);
+	}
+	const args = sub.split(":");
+	if (args.length === 0) {
+		console.error("  [No Command Set]");
+		console.log("  Iroshiki must be run with a command.");
+		process.exit(0);
+	}
+	switch (args[0]) {
+		case "list": {
+			console.log("  [LISTING THEMES]");
+			listThemes();
+			console.log("  [COMPLETE]");
+			break;
+		}
+		case "test-prep": {
+			console.log("[TESTING]");
+			const theme = selectTheme(Bun.argv[3]!);
+			if (!theme) {
+				console.log("[ERROR] Could not find theme");
+				return;
+			}
+			createTheme(theme);
+			console.log("[TEST COMPLETE]");
+			break;
+		}
+		case "install": {
+			console.log("  [INSTALLING]");
+			console.log("    [Locating...]: ", Bun.argv[3]);
+			const theme = selectTheme(Bun.argv[3]!);
+			if (!theme) {
+				console.log("    [ERROR] Could not find theme");
+				console.log("");
+				return;
+			}
+			console.log("    [Theme Found...]");
+			const themeCss = createTheme(theme);
+			console.log("    [Theme CSS Loaded To Memory...]");
+			console.log("    [Looking for File Target]: ", Bun.argv[4]);
+			const targetInstall = join(cwd(), Bun.argv[4]!);
+			if (!targetInstall.endsWith(".css")) {
+				console.log("    [Not CSS File...]");
+				if (fs.existsSync(targetInstall)) {
+					console.log("    [Target Found...]");
+					if (fs.statSync(targetInstall).isDirectory()) {
+						console.log("    [Target is directory...]");
+						const targetFile = join(
+							targetInstall,
+							`${Bun.argv[3]}-palette.css`
+						);
+						fs.writeFileSync(targetFile, themeCss, "utf8");
+						console.log("    [Wrote Palette]");
+						console.log("    [SUCCESS]");
+						PostInstall();
+						console.log("");
+						break;
+					}
+					console.log("    [Invalid Target]");
+					console.log("    [FAILURE]");
+					console.log("");
+					break;
+				}
+			} else {
+				if (fs.existsSync(targetInstall)) {
+					if (fs.statSync(targetInstall).isFile()) {
+						console.log("    [Target is file...]");
+						fs.writeFileSync(targetInstall, themeCss, "utf8");
+						console.log("    [Wrote Palette]");
+						console.log("    [SUCCESS]");
+						PostInstall();
+						console.log("");
+						break;
+					}
+					console.log("    [Invalid Target]");
+					console.log("    [FAILURE]");
+					console.log("");
+					break;
+				} else {
+					const targetFile = join(cwd(), `${Bun.argv[4]}`);
+					fs.writeFileSync(targetFile, themeCss, "utf8");
+					console.log("    [Wrote Palette]");
+					console.log("    [SUCCESS]");
+					PostInstall();
+					console.log("");
+					break;
+				}
+			}
+			break;
+		}
+		case "clean": {
+			const target = join(cwd(), args[1]!);
+			const files = fs.readdirSync(target);
+			for (const file of files) {
+				if (file.slice(file.length - 5, file.length) == ".conf") {
+					const filePath = join(target, file);
+					fs.rmSync(filePath);
+				}
+			}
+			break;
+		}
+		case "prep-kitty": {
+			const target = "./src/data/kitty-themes";
+			const files = fs.readdirSync(target);
+			let importStatement = ``;
+			let exportStatement = `const kittyThemes = {\n`;
+			for (const file of files) {
+				// strip extension
+				const themeName = file.slice(0, file.length - 3); // . t s
+				importStatement += `import {${themeName}} from "./${file}"\n`;
+				exportStatement += `${themeName},\n`;
+			}
+			exportStatement += `},\n export default kittyThemes;`;
+			const contents = importStatement + exportStatement;
+			fs.writeFileSync(join(target, "index.ts"), contents, "utf8");
+			break;
+		}
+		case "insert-css": {
+			const target = join(cwd(), args[1]!);
+			break;
+		}
+		case "chroma": {
+			console.log("  [Processing Color]");
+			switch (args[1]) {
+				case "json": {
+					const target = args[2];
+					if (!target) {
+						console.error("  [Invalid Command]");
+						console.log("  chroma:json needs a target argument.");
+						process.exit(0);
+					}
+					// validate target
+					const targetPath = join(cwd(), `${target}.json`);
+					if (!fs.existsSync) {
+						console.error("  [Invalid Command]");
+						console.log(`  chroma:json:${target}.json must exist`);
+						process.exit(0);
+					}
+					const values = fs.readFileSync(targetPath, "utf8");
+					if (!values) {
+						console.error("  [Invalid Command]");
+						console.log("  chroma:json:target sucks, rtfm.");
+						process.exit(0);
+					}
+					const transform = args[3];
+					if (!target) {
+						console.error("  [Invalid Command]");
+						console.log("  chroma:json:target needs a transform argument.");
+						process.exit(0);
+					}
+					if (transform == "catpuccinbase" || "catpuccinlatte") {
+						const themePartial = JSON.parse(values) as Record<string, string>;
+						for (const [k, v] of Object.entries(themePartial)) {
+							if (
+								k == "color1" ||
+								k == "color2" ||
+								k == "color3" ||
+								k == "color4" ||
+								k == "color5" ||
+								k == "color6"
+							) {
+								if (transform == "catpuccinbase") {
+									let newV = chromaTransforms.catpuccin.default(v);
+									let newK =
+										"color" + (parseInt(k.slice(k.length - 1, k.length)) + 8); // i am in hell
+									themePartial[newK] = newV;
+								} else {
+									let newV = chromaTransforms.catpuccin.default(v);
+									let newK =
+										"color" + (parseInt(k.slice(k.length - 1, k.length)) + 8); // i am in hell
+									themePartial[newK] = newV;
+								}
+							}
+						}
+						// write back to target
+						fs.writeFileSync(targetPath, JSON.stringify(themePartial), "utf8");
+					}
+					break;
+				}
+				case "catppuccinbase": {
+					console.log("  [Catpuccin Base Transform]");
+					const input = args[2];
+					if (!input) {
+						console.error("  [Invalid Command]");
+						console.log("  chroma:catppuccinbase needs an input argument.");
+						process.exit(0);
+					}
+					console.log("  [Input Color]: ", input);
+					const output = chromaTransforms.catpuccin.default(input);
+					console.log("  [Transform Success]");
+					console.log("  [Your New Color]: ", output);
+					console.log();
+					return;
+				}
+				case "catppuccinlatte": {
+					console.log("  [Catpuccin Latte Transform]");
+					const input = args[2];
+					if (!input) {
+						console.error("[Invalid Command]");
+						console.log("chroma:catppuccinbase needs an input argument.");
+						process.exit(0);
+					}
+					console.log("  [Input Color]: ", input);
+					const output = chromaTransforms.catpuccin.latte(input);
+					console.log("  [Transform Success]");
+					console.log("  [Your New Color]: ", output);
+					console.log();
+					return;
+				}
+				default: {
+					console.error("  [Unknown Command]");
+					console.log("  Iroshiki does not support that.");
+					console.log();
+					process.exit(0);
+				}
+			}
+		}
+	}
+    

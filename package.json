@@ -1,0 +1,20 @@
+{
+	"name": "iroshiki",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"bin": {
+		"iroshiki": "index.ts"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@types/figlet": "^1.7.0",
+		"chroma-js": "^3.1.2",
+		"figlet": "^1.8.1"
+	}
+}

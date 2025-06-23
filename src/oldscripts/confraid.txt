@@ -1,0 +1,50 @@
+		case "conf": {
+			console.log("  [Processing Conf Files]");
+			const target = args[1];
+			if (!target) {
+				console.error("  [Invalid Command]");
+				console.log("  conf needs a target argument.");
+				process.exit(0);
+			}
+			const targetPath = join(cwd(), target);
+			if (
+				!fs.existsSync(targetPath) ||
+				!fs.statSync(targetPath).isDirectory()
+			) {
+				console.error("  [Invalid Command]");
+				console.log("  conf needs a valid target argument, should be a dir");
+				process.exit(0);
+			}
+			const files = fs.readdirSync(targetPath);
+			for (const file of files) {
+				const theme_name = file.slice(0, file.length - 5);
+				console.log(figlet.textSync(` ${theme_name}`, "ASCII New Roman"));
+				const filePath = join(targetPath, file);
+				if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+					console.error("  [Invalid Command]");
+					console.log(
+						"  Iroshiki can't handle nested folders rn. Make a pull request if you add it"
+					);
+					break;
+				}
+				const fileContents = fs.readFileSync(filePath, "utf8");
+				const lines = fileContents.split("\n");
+				let newTheme: Record<string, string> = {};
+				let newThemeFileContents: string = `export const ${theme_name} = {\n`;
+				for (const line of lines) {
+					if (line.slice(0, 5) == "color") {
+						const values = line.split(" ");
+						const key = values[0]!;
+						const value = values[values.length - 1]!;
+						newTheme[key] = value;
+						newThemeFileContents += `${key}: "${value}",\n`;
+					}
+				}
+				newThemeFileContents += `};`;
+				const newThemePath = join(targetPath, `${theme_name}.ts`);
+				const newPath = join(targetPath, `${file}.json`);
+				// fs.writeFileSync(newPath, JSON.stringify(newTheme), "utf8");
+				fs.writeFileSync(newThemePath, newThemeFileContents, "utf8");
+			}
+			break;
+		}
