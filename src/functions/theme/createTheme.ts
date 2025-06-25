@@ -1,6 +1,7 @@
 import { chromaTransforms } from "../chroma";
 import type { InputTheme } from "../../types";
 import { makeTailwindRules } from "./tailwindOverride";
+import { prism } from "../prism/makePrismRules";
 
 const RuleMap = new Map<string, string>();
 
@@ -112,6 +113,6 @@ function createCSSRulesContent(lines: CSSRule[], tailwindRules: string) {
 		}
 	}
 	returnString += tailwindRules;
-	returnString += "}";
+	returnString += "}\n";
 	return returnString;
 }

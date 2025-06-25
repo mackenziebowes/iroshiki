@@ -5,6 +5,7 @@ import { outputTheme } from "./outputTheme";
 import { createTheme } from "./createTheme";
 import { createInkTheme } from "./createInkTheme";
 import label from "../data/Labels";
+import { prism } from "../prism/makePrismRules";
 
 export const InstallCmd: Command = {
 	name: "install",
@@ -22,6 +23,7 @@ export const InstallCmd: Command = {
 				let output = label.ink();
 				const themeCss = createInkTheme(selectedTheme);
 				output += themeCss;
+				output += prism.dark();
 				outputTheme(output, args[0]!, args[1]!);
 				return;
 			}
@@ -43,6 +45,16 @@ export const InstallCmd: Command = {
 		} catch {}
 		const themeCss = createTheme(selectedTheme);
 		output += themeCss;
+		try {
+			const argparts = args[0]!.split(":");
+			if (argparts.length > 1) {
+				if (argparts[1] == "light") {
+					output += prism.light();
+				} else {
+					output += prism.dark();
+				}
+			}
+		} catch {}
 		outputTheme(output, args[0]!, args[1]!);
 		return;
 	},
