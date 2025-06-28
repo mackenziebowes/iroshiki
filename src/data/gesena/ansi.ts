@@ -152,9 +152,12 @@ const sweetie = {
 
 const ansi = {
 	ruined,
-	spring: spring_pastel,
+	ruined_pastel,
+	spring,
+	spring_pastel,
 	vivid,
 	sakura,
+	sakura_pastel,
 	sweetie,
 };
 

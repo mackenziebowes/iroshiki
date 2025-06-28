@@ -1,3 +1,5 @@
+![Iroshiki - Indexed Palettes For The Web](https://github.com/mackenziebowes/iroshiki/display/Small_Iroshiki_banner.png)
+
 # Iroshiki - Indexed Palettes For The Web
 
 ## The Name
